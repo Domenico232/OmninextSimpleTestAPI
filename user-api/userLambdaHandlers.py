@@ -1,12 +1,31 @@
 import json
 import boto3
-import logging
-from decimal import Decimal
+from flask import Flask, request
 
+#Inizializzazione dell'Applicazione Flask e Risorse DynamoDB
+app = Flask(__name__)
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('Users')
+table = dynamodb.Table('users')
 
-def lambda_handler(event, context):
+#Endpoint e funzione per la creazione di un nuovo utente
+@app.route('/user', methods=['POST'])
+def create_user():
+    data = request.json
+    response = table.put_item(Item=data)
+    return json.dumps({'message': 'User created successfully'}), 200
+
+#Endpoint e funzione per trovare un utente nel database con id
+@app.route('/user/<id>', methods=['GET'])
+def get_user_by_id(id):
+    response = table.get_item(Key={'id': id})
+    if 'Item' in response:
+        return json.dumps(response['Item']), 200
+    else:
+        return json.dumps({'message': 'User not found'}), 404
+    
+
+#integrazione metodi in aws lambda
+""" def lambda_handler(event, context):
     body = json.loads(event['body'])
     user_id = body['id']
     user_name = body['name']
@@ -21,21 +40,10 @@ def lambda_handler(event, context):
     return {
         'statusCode': 200,
         'body': json.dumps('User created successfully!')
-    }
+    } """
 
-
-
-import json
-import boto3
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('Users')
-
-def decimal_default(obj):
-    if isinstance(obj, Decimal):
+""" def decimal_default(obj):
+    if isinstance(obj):
         return int(obj) if obj % 1 == 0 else float(obj)
         
 def lambda_handler(event, context):
@@ -44,8 +52,7 @@ def lambda_handler(event, context):
         if query_params:
             user_id = query_params.get('id')
             if user_id:
-                logger.info("Received user_id: %s", user_id)
-                
+
                 response = table.get_item(
                     Key={
                         'id': user_id
@@ -68,9 +75,14 @@ def lambda_handler(event, context):
                     'statusCode': 400,
                     'body': json.dumps('Missing user id')
                 }
+        else:
+            return {
+                'statusCode': 400,
+                'body': json.dumps('Invalid request: no query string parameters found')
+            }
     except Exception as e:
-        logger.error("Error processing request: %s", str(e))
         return {
             'statusCode': 500,
             'body': json.dumps('Internal Server Error')
-        }
+        } """
+

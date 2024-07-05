@@ -1,0 +1,27 @@
+service: user-api
+
+provider:
+  name: aws
+  runtime: python3.8
+  region: eu-west-1 # Puoi cambiare la regione con quella preferita
+
+functions:
+  createUser:
+    handler: handler.create_user
+    events:
+      - http:
+          path: user
+          method: post
+  getUserById:
+    handler: handler.get_user_by_id
+    events:
+      - http:
+          path: user/{id}
+          method: get
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
